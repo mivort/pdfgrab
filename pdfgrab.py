@@ -12,14 +12,18 @@ import requests
 scriptdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(scriptdir)
 
+outputdir = "pdf_downloads"
+search_criteria = "+datasheet+pdf"
+
 import splinter
 from splinter import Browser
 
 if __name__ == "__main__":
+    print("* Running chromedriver...")
     browser = Browser('chrome')
 
 def main():
-    with open(scriptdir + "/data/input.csv", 'rt', encoding='utf8') as csvfile:
+    with open(scriptdir + "/input.csv", 'rt', encoding='utf8') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for idx, row in enumerate(reader):
             process_row(idx, remove_non_ascii("".join(row)))
@@ -35,7 +39,7 @@ def process_row(idx, string):
         return
 
     print("* Looking for '{}'...".format(string))
-    browser.visit('https://duckduckgo.com/?q={}+datasheet+pdf'.format(string))
+    browser.visit('https://duckduckgo.com/?q={}{}'.format(string, search_criteria))
     try:
         # Google selector
         #     find_by_xpath("//span[text()='[PDF]']/following-sibling::a").first
@@ -45,7 +49,10 @@ def process_row(idx, string):
         print("* Found PDF! {}".format(first_pdf.text))
         print("* URL: {}".format(first_pdf['href']))
 
-        pdf_out = 'out/{:02}. {} @ {}.pdf'.format(idx, string, first_pdf.text)
+        if not os.path.exists(outputdir):
+            os.makedirs(outputdir)
+
+        pdf_out = '{}/{:02}. {} @ {}.pdf'.format(outputdir, idx, string, first_pdf.text)
         print("* Saving to '{}'...".format(pdf_out))
         download_file(first_pdf['href'], pdf_out)
     except:
@@ -54,7 +61,7 @@ def process_row(idx, string):
 
 def download_file(url, out):
     if os.path.isfile(out):
-        print("* File '{}' already exists")
+        print("* File '{}' already exists".format(out))
         return
 
     local_filename = out
@@ -81,4 +88,4 @@ def download_file(url, out):
 
 if __name__ == "__main__":
     main()
-    browser.close()
+    browser.quit()
