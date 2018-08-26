@@ -8,22 +8,28 @@ import time
 import urllib
 import progressbar
 import requests
+import queue
 
-scriptdir = os.path.dirname(os.path.realpath(__file__))
+scriptdir = os.path.dirname(os.path.realpath('__file__'))
 sys.path.append(scriptdir)
 
 outputdir = "pdf_downloads"
 search_criteria = "+datasheet+pdf"
+input_file = "{}/input.csv".format(scriptdir)
 
 import splinter
 from splinter import Browser
 
 if __name__ == "__main__":
+    if not os.path.isfile(input_file):
+        print("* File '{}' doesn't exists".format(input_file))
+        sys.exit()
+
     print("* Running chromedriver...")
     browser = Browser('chrome')
 
 def main():
-    with open(scriptdir + "/input.csv", 'rt', encoding='utf8') as csvfile:
+    with open(input_file, 'rt', encoding='utf8') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for idx, row in enumerate(reader):
             process_row(idx, remove_non_ascii("".join(row)))
